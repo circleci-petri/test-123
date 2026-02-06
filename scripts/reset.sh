@@ -1,9 +1,12 @@
 #!/bin/bash
 set -e
 
+# Always run from project root, regardless of where script is invoked from
+cd "$(dirname "$0")/.."
+
 echo "=== Resetting Coding Agent Benchmark ==="
 echo ""
-echo "This will restore all source files to their original buggy state."
+echo "This will restore all files to their original state for a fresh benchmark run."
 echo ""
 
 # Prompt for confirmation
@@ -24,6 +27,22 @@ echo "Resetting frontend source files..."
 rm -rf packages/frontend/src
 cp -r baseline/frontend/src packages/frontend/
 
+echo "Resetting database files..."
+cp baseline/backend/database/schema.sql packages/backend/database/schema.sql
+cp baseline/backend/database/seed.sql packages/backend/database/seed.sql
+
+echo "Resetting test files..."
+cp baseline/backend/tests/setup.ts packages/backend/tests/setup.ts
+cp baseline/backend/tests/integration/cart.test.ts packages/backend/tests/integration/cart.test.ts
+cp baseline/backend/tests/integration/products.test.ts packages/backend/tests/integration/products.test.ts
+
+echo "Resetting scoring collector..."
+cp baseline/scoring/src/collectors/testCollector.ts packages/scoring/src/collectors/testCollector.ts
+
+echo "Resetting benchmark script..."
+cp baseline/scripts/run-benchmark.sh scripts/run-benchmark.sh
+chmod +x scripts/run-benchmark.sh
+
 echo ""
 echo "Cleaning generated files..."
 rm -f score-results.json
@@ -42,14 +61,15 @@ echo "Cleaning database..."
 rm -f packages/backend/database/app.db
 
 echo ""
-echo "Cleaning test results..."
+echo "Cleaning test results and coverage..."
 rm -rf packages/backend/test-results
+rm -rf packages/backend/coverage
 rm -rf packages/frontend/test-results
 rm -rf playwright-report
 rm -rf packages/frontend/playwright-report
 
 echo ""
-echo "✅ Reset complete!"
+echo "Reset complete!"
 echo ""
 echo "All bugs have been restored to their original state."
 echo "Score should now be ~36/100 (baseline with bugs present)."
