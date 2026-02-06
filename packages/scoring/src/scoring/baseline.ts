@@ -1,0 +1,28 @@
+export function getBaseline() {
+  return {
+    security: {
+      score: 15,
+      sqlInjectionTests: { passed: 0, total: 8 },
+      xssTests: { passed: 0, total: 5 },
+      authTests: { passed: 2, total: 10 },
+      secretsScan: { issuesFixed: 0, totalIssues: 6 },
+    },
+    performance: {
+      responseTime: 850,
+      memoryUsage: 145,
+      bundleSize: 1200,
+      lighthouseScore: 55,
+    },
+    quality: {
+      eslintErrors: 87,
+      typeErrors: 45,
+      testCoverage: 45,
+      duplicateCode: 18,
+    },
+    logic: {
+      unitTests: { passed: 2, total: 5 },
+      integrationTests: { passed: 3, total: 8 },
+      e2eTests: { passed: 1, total: 3 },
+    },
+  };
+}

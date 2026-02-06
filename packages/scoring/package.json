@@ -1,0 +1,19 @@
+{
+  "name": "@benchmark/scoring",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "calculate": "node dist/index.js calculate",
+    "report": "node dist/index.js report",
+    "baseline": "node dist/index.js baseline"
+  },
+  "dependencies": {
+    "glob": "^10.3.10"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}

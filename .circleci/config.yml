@@ -1,0 +1,172 @@
+version: 2.1
+
+workflows:
+  benchmark:
+    jobs:
+      - setup
+      - run-backend-tests:
+          requires: [setup]
+      - run-frontend-tests:
+          requires: [setup]
+      - run-security-scan:
+          requires: [setup]
+      - run-performance-tests:
+          requires: [setup]
+      - calculate-score:
+          requires:
+            - run-backend-tests
+            - run-frontend-tests
+            - run-security-scan
+            - run-performance-tests
+      - generate-report:
+          requires: [calculate-score]
+
+jobs:
+  setup:
+    docker:
+      - image: cimg/node:20.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package.json" }}
+            - v1-dependencies-
+      - run:
+          name: Install dependencies
+          command: npm install
+      - save_cache:
+          paths:
+            - node_modules
+            - packages/backend/node_modules
+            - packages/frontend/node_modules
+            - packages/scoring/node_modules
+          key: v1-dependencies-{{ checksum "package.json" }}
+      - persist_to_workspace:
+          root: .
+          paths:
+            - node_modules
+            - packages/*/node_modules
+            - packages/*/dist
+
+  run-backend-tests:
+    docker:
+      - image: cimg/node:20.0
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: Build backend
+          command: npm run build:backend
+      - run:
+          name: Run backend unit tests
+          command: npm run test:backend:unit
+      - run:
+          name: Run backend integration tests
+          command: npm run test:backend:integration
+      - store_test_results:
+          path: packages/backend/test-results
+      - persist_to_workspace:
+          root: .
+          paths:
+            - packages/backend/test-results
+
+  run-frontend-tests:
+    docker:
+      - image: cimg/node:20.0
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: Run frontend unit tests
+          command: npm run test:frontend:unit
+      - store_test_results:
+          path: packages/frontend/test-results
+      - persist_to_workspace:
+          root: .
+          paths:
+            - packages/frontend/test-results
+
+  run-security-scan:
+    docker:
+      - image: cimg/node:20.0
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: Start backend server
+          command: npm run start:backend
+          background: true
+      - run:
+          name: Wait for server
+          command: sleep 30
+      - run:
+          name: Run security tests
+          command: npm run test:security || true
+      - run:
+          name: Run npm audit
+          command: npm audit --json > security-audit.json || true
+      - store_artifacts:
+          path: security-audit.json
+      - persist_to_workspace:
+          root: .
+          paths:
+            - security-audit.json
+
+  run-performance-tests:
+    docker:
+      - image: cimg/node:20.0
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: Build frontend
+          command: npm run build:frontend
+      - run:
+          name: Measure bundle size
+          command: |
+            BUNDLE_SIZE=$(du -sk packages/frontend/dist | cut -f1)
+            echo "Bundle size: ${BUNDLE_SIZE}KB"
+            echo "{\"bundleSize\": ${BUNDLE_SIZE}}" > performance-metrics.json
+      - persist_to_workspace:
+          root: .
+          paths:
+            - performance-metrics.json
+
+  calculate-score:
+    docker:
+      - image: cimg/node:20.0
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: Build scoring package
+          command: |
+            cd packages/scoring
+            npm run build
+      - run:
+          name: Calculate score
+          command: npm run score:calculate
+      - persist_to_workspace:
+          root: .
+          paths:
+            - score-results.json
+
+  generate-report:
+    docker:
+      - image: cimg/node:20.0
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: Generate markdown report
+          command: npm run score:report
+      - store_artifacts:
+          path: benchmark-report.md
+      - store_artifacts:
+          path: score-results.json

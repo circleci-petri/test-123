@@ -1,0 +1,14 @@
+.product-list {
+  padding: 20px;
+}
+
+.product-list h2 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}

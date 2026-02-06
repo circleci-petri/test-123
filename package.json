@@ -1,0 +1,42 @@
+{
+  "name": "coding-agent-benchmark",
+  "version": "1.0.0",
+  "description": "E-commerce benchmark application for testing AI coding agents",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "setup": "npm install && npm run build:all",
+    "build:all": "npm run build:backend && npm run build:frontend && npm run build:scoring",
+    "build:scoring": "npm run build -w packages/scoring",
+    "build:backend": "npm run build -w packages/backend",
+    "build:frontend": "npm run build -w packages/frontend",
+    "start:backend": "npm run start -w packages/backend",
+    "start:frontend": "npm run start -w packages/frontend",
+    "start:all": "concurrently \"npm:start:backend\" \"npm:start:frontend\"",
+    "test:backend:unit": "npm run test:unit -w packages/backend",
+    "test:backend:integration": "npm run test:integration -w packages/backend",
+    "test:frontend:unit": "npm run test:unit -w packages/frontend",
+    "test:frontend:e2e": "npm run test:e2e -w packages/frontend",
+    "test:security": "npm run test -w packages/backend -- tests/security",
+    "test:all": "npm run test:backend:unit && npm run test:backend:integration && npm run test:frontend:unit && npm run test:frontend:e2e",
+    "lint": "eslint . --ext .ts,.tsx",
+    "score:calculate": "npm run calculate -w packages/scoring",
+    "score:report": "npm run report -w packages/scoring",
+    "benchmark": "sh scripts/run-benchmark.sh",
+    "reset": "sh scripts/reset.sh"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "concurrently": "^8.0.0",
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}
