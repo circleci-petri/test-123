@@ -35,6 +35,14 @@ describe('Products API', () => {
     });
   });
 
+  describe('GET /api/products/:id', () => {
+    it('should return 400 for non-numeric product ID', async () => {
+      const response = await request(app).get('/api/products/abc');
+
+      expect(response.status).toBe(400);
+    });
+  });
+
   describe('DELETE /api/products/:id', () => {
     it('should require admin authentication to delete product', async () => {
       const response = await request(app).delete('/api/products/1');

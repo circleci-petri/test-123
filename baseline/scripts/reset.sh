@@ -45,8 +45,6 @@ cp baseline/frontend/tests/unit/CartItem.test.tsx packages/frontend/tests/unit/C
 echo "Resetting scoring files..."
 cp baseline/scoring/src/collectors/testCollector.ts packages/scoring/src/collectors/testCollector.ts
 cp baseline/scoring/src/scoring/baseline.ts packages/scoring/src/scoring/baseline.ts
-cp baseline/scoring/src/scoring/calculator.ts packages/scoring/src/scoring/calculator.ts
-cp baseline/scoring/src/reporting/markdown.ts packages/scoring/src/reporting/markdown.ts
 
 echo "Resetting benchmark script..."
 cp baseline/scripts/run-benchmark.sh scripts/run-benchmark.sh
@@ -81,7 +79,7 @@ echo ""
 echo "Reset complete!"
 echo ""
 echo "All bugs have been restored to their original state."
-echo "Score should now be ~42/100 (baseline with bugs present)."
+echo "Score should now be ~36/100 (baseline with bugs present)."
 echo ""
 echo "Next steps:"
 echo "  1. Run: npm run build:all"

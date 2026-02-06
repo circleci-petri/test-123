@@ -185,28 +185,90 @@ This document tracks all intentionally seeded bugs for maintainers. **Do NOT sha
     - Fix: Add null check
     - Test: `packages/backend/tests/unit/cartService.test.ts:21`
 
+## Additional Bugs (Discovered)
+
+### Missing Authentication
+
+47. **Product Creation Endpoint**
+    - File: `packages/backend/src/routes/products.ts:56`
+    - Code: `router.post('/', validateProduct, async (req, res) => {` (no auth middleware)
+    - Fix: Add `authenticate` middleware before `validateProduct`
+    - Test: `packages/backend/tests/security/auth.test.ts`
+
+### Broken Authorization
+
+48. **requireAdmin Doesn't Check Admin Role**
+    - File: `packages/backend/src/middleware/auth.ts:39-45`
+    - Code: `requireAdmin` only checks `!req.user`, never verifies `role === 'admin'`
+    - Fix: Add `if (req.user.role !== 'admin') return res.status(403)`
+    - Test: `packages/backend/tests/security/auth.test.ts`
+
+### Ineffective Sanitization
+
+49. **sanitizeInput Is a No-Op**
+    - File: `packages/backend/src/utils/helpers.ts:54-56`
+    - Code: `return String(input)` — no HTML escaping
+    - Fix: Escape `<`, `>`, `&`, `"`, `'` to HTML entities
+    - Test: `packages/backend/tests/unit/helpers.test.ts`
+
+### Missing Validation
+
+50. **No Email Format Validation in Registration**
+    - File: `packages/backend/src/middleware/validation.ts:17-25`
+    - Code: `validateUser` checks email is present but never validates format
+    - Fix: Add regex check `/^[^\s@]+@[^\s@]+\.[^\s@]+$/`
+    - Test: `packages/backend/tests/unit/validation.test.ts`
+
+51. **Missing NaN Checks After parseInt**
+    - File: `packages/backend/src/routes/products.ts:44`, `packages/backend/src/routes/cart.ts:52`
+    - Code: `parseInt(req.params.id)` can return NaN, causing downstream issues
+    - Fix: Add `if (isNaN(id)) return res.status(400)`
+    - Test: `packages/backend/tests/integration/products.test.ts`
+
+### Wrong Property Access
+
+52. **Checkout Total Uses Wrong Property Path**
+    - File: `packages/backend/src/routes/checkout.ts:26,39`
+    - Code: `item.product.price` — but `getCartItems` returns flat JOIN rows with `price` on `item` directly
+    - Fix: Change to `(item as any).price`
+    - Test: Causes TypeError at runtime during checkout
+
+### Missing Error Handling (Frontend)
+
+53. **Frontend Fetches Don't Check response.ok**
+    - Files: `packages/frontend/src/App.tsx:20-22`, `packages/frontend/src/hooks/useProducts.ts:24-25`, `packages/frontend/src/context/CartContext.tsx:127-128`
+    - Code: Calls `response.json()` without checking `response.ok` first
+    - Fix: Add `if (!response.ok) throw new Error(...)` before `.json()`
+    - Test: `packages/frontend/tests/unit/App.test.tsx`
+
+54. **Login Page Silently Fails on Bad Credentials**
+    - File: `packages/frontend/src/App.tsx:96-110`
+    - Code: On login failure (401), `response.json()` is called but the error is never shown to the user
+    - Fix: Check `response.ok` and dispatch an error notification
+    - Test: `packages/frontend/tests/unit/App.test.tsx`
+
 ## Bug Summary
 
 | Category | Count | Fixed in Baseline |
 |----------|-------|-------------------|
-| Security | 6 | 0 |
+| Security | 10 | 0 |
 | Performance | 5 | 0 |
-| Code Quality | 20+ | 0 |
-| Logic | 10 | 0 |
-| **Total** | **40+** | **0** |
+| Code Quality | 22+ | 0 |
+| Logic | 11 | 0 |
+| **Total** | **48+** | **0** |
 
 ## Expected Test Results
 
 ### Baseline (All Bugs Present)
-- Security Tests: 2/23 passing (9%)
+- Security Tests: ~5/20 passing (25%)
 - Performance Tests: 0/4 passing (0%)
 - Quality Metrics: High error counts
-- Logic Tests: 6/16 passing (38%)
-- **Overall Score: ~36/100**
+- Logic Tests: ~9/19 passing (47%)
+- **Overall Score: ~28/100**
 
 ### After All Fixes
-- Security Tests: 23/23 passing (100%)
+- Security Tests: 20/20 passing (100%)
 - Performance Tests: 4/4 passing (100%)
 - Quality Metrics: Low error counts
-- Logic Tests: 16/16 passing (100%)
+- Logic Tests: 19/19 passing (100%)
 - **Overall Score: ~98/100**
